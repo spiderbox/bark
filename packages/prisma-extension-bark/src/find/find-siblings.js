@@ -10,7 +10,7 @@ import { path_from_depth } from '../utils.js'
  * @param {import('$types/find').findSiblingsArgs<T, A>} args
  * @returns {Promise<import('$types/find').findSiblingsResult<T, A>>}
  */
-export default async function ({ node, where, orderBy = default_order_by, ...args }) {
+export default async function ({ node, whereNode, orderBy = default_order_by, ...args }) {
 	const ctx = Prisma.getExtensionContext(this)
 
 	/** @type {string} */
@@ -22,20 +22,22 @@ export default async function ({ node, where, orderBy = default_order_by, ...arg
 	if (node) {
 		path = node.path
 		depth = node.depth
-	} else if (where) {
-		const target = await ctx.findUniqueOrThrow({ where })
+	} else if (whereNode) {
+		const target = await ctx.findUniqueOrThrow({ where: whereNode })
 		if (target) {
 			path = target.path
 			depth = target.depth
 		}
 	}
 
+	const where = args.where || {}
+
 	if (depth === 1) {
 		// get the whole depth
 		return ctx.findMany({
-			where: { depth },
 			orderBy,
-			...args
+			...args,
+			where: { ...where, depth }
 		})
 	}
 
@@ -46,15 +48,16 @@ export default async function ({ node, where, orderBy = default_order_by, ...arg
 		const lte_path = parent_path + max_segment
 
 		return ctx.findMany({
+			orderBy,
+			...args,
 			where: {
+				...where,
 				depth,
 				path: {
 					gt: gt_path,
 					lte: lte_path,
 				}
 			},
-			orderBy,
-			...args
 		})
 	}
 }

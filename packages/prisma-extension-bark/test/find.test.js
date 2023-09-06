@@ -8,7 +8,7 @@ describe('findParent()', async () => {
 
 	/* Home nodes */
 	it('home_node\'s parent using `where` arg', async () => {
-		const parent = await prisma.node.findParent({where: { id: 2 }})
+		const parent = await prisma.node.findParent({whereNode: { id: 2 }})
 		expect(parent).toStrictEqual(root_node)
 	})
 	it('home_node\'s parent using `of` arg', async () => {
@@ -22,13 +22,13 @@ describe('findParent()', async () => {
 		expect(parent).toBe(null)
 	})
 	it('root_node\'s parent using `of` arg', async () => {
-		const parent = await prisma.node.findParent({where: { id: 1 }})
+		const parent = await prisma.node.findParent({whereNode: { id: 1 }})
 		expect(parent).toBe(null)
 	})
 
 	/* None existent node */
 	it('none existent node using `where` arg', async () => {
-		const fn = prisma.node.findParent({where: {id: 99999 }})
+		const fn = prisma.node.findParent({whereNode: {id: 99999 }})
 		expect(fn).rejects.toThrowError(/No(.*)found$/)
 	})
 })
@@ -94,10 +94,18 @@ describe('findChildren()', async () => {
 		expect(result?.at?.(-1)?.path).toBe('0001000100010001')
 	})
 
+	it('has children, node input, w/ args with where', async () => {
+		const node = await get_a_node()
+
+		const result = await prisma.node.findChildren({ node, select: { path: true}, orderBy: { path: 'desc' }, where: { name: 'A-A' } })
+		expect(result?.length).toBe(1)
+		expect(result?.at?.(0)?.path).toBe('0001000100010001')
+	})
+
 	it('has children, where input, w/o args ', async () => {
 		const node = await get_a_node()
 
-		const result = await prisma.node.findChildren({ where: { path: node.path } })
+		const result = await prisma.node.findChildren({ whereNode: { path: node.path } })
 		expect(result?.length).toBe(5)
 		expect(result?.at?.(0)?.path).toBe('0001000100010001')
 		expect(result?.at?.(-1)?.path).toBe('0001000100010005')
@@ -124,7 +132,7 @@ describe('findSiblings()', async () => {
 	it('where input, w/o args ', async () => {
 		const node = await get_a_node()
 
-		const result = await prisma.node.findSiblings({ where: { path: node.path }})
+		const result = await prisma.node.findSiblings({ whereNode: { path: node.path }})
 		expect(result?.length).toBe(3)
 		expect(result?.at?.(0)?.path).toBe('000100010001')
 		expect(result?.at?.(-1)?.path).toBe('000100010003')
@@ -142,7 +150,7 @@ describe('findAncestors()', async () => {
 	it('node input, w/o args ', async () => {
 		const node = await get_a_a_node()
 
-		const result = await prisma.node.findAncestors({ where: { path: node.path }})
+		const result = await prisma.node.findAncestors({ whereNode: { path: node.path }})
 		expect(result?.length).toBe(3)
 		expect(result?.at?.(0)?.path).toBe('0001')
 		expect(result?.at?.(-1)?.path).toBe('000100010001')
@@ -169,7 +177,7 @@ describe('findDescendants()', async () => {
 	it('where input, w/o args ', async () => {
 		const node = await get_home_node()
 
-		const result = await prisma.node.findDescendants({ where: { path: node.path }})
+		const result = await prisma.node.findDescendants({ whereNode: { path: node.path }})
 		expect(result?.length).toBe(11)
 		expect(result?.at?.(0)?.path).toBe('000100010001')
 		expect(result?.at?.(-1)?.path).toBe('000100010003')

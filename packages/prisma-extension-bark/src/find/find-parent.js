@@ -9,7 +9,7 @@ import { path_from_depth } from '../utils.js'
  * @param {import('$types/find').findParentArgs<T, A>} args
  * @returns {Promise<import('$types/find').findParentResult<T, A>>}
  */
-export default async function ({ node, where, ...args }) {
+export default async function ({ node, whereNode, ...args }) {
 	const ctx = Prisma.getExtensionContext(this)
 
 	/** @type {string} */
@@ -20,9 +20,9 @@ export default async function ({ node, where, ...args }) {
 	if (node) {
 		path = node.path
 		depth = node.depth
-	} else if (where) {
+	} else if (whereNode) {
 		const target = await ctx.findUniqueOrThrow({
-			where,
+			where: whereNode,
 			select: {
 				path: true,
 				depth: true
