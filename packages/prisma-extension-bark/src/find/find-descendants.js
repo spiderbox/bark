@@ -9,7 +9,7 @@ import { default_order_by } from '../consts.js'
  * @param {import('$types/find').findDescendantsArgs<T, A>} args
  * @returns {Promise<import('$types/find').findDescendantsResult<T, A>>}
  */
-export default async function ({ node, where, orderBy = default_order_by, ...args }) {
+export default async function ({ node, whereNode, orderBy = default_order_by, ...args }) {
 	const ctx = Prisma.getExtensionContext(this)
 
 	/** @type {string} */
@@ -27,8 +27,8 @@ export default async function ({ node, where, orderBy = default_order_by, ...arg
 		depth = node.depth
 		numchild = node.numchild
 		id = node.id
-	} else if (where) {
-		const target = await ctx.findUniqueOrThrow({ where })
+	} else if (whereNode) {
+		const target = await ctx.findUniqueOrThrow({ where: whereNode })
 		if (target) {
 			path = target.path
 			depth = target.depth
@@ -43,8 +43,13 @@ export default async function ({ node, where, orderBy = default_order_by, ...arg
 		return null
 	}
 
+	const where = args.where || {}
+
 	return ctx.findMany({
+		orderBy,
+		...args,
 		where: {
+			...where,
 			id: {
 				not: id
 			},
@@ -54,9 +59,7 @@ export default async function ({ node, where, orderBy = default_order_by, ...arg
 			depth: {
 				gte: depth
 			}
-		},
-		orderBy,
-		...args
+		}
 	})
 
 
