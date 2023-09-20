@@ -75,7 +75,7 @@ export default async function ({ node, where, position, reference }) {
 				new_pos = 1
 				// Change position
 				position = 'first-sibling'
-				siblings = null
+				siblings = []
 			} else {
 				const rn_last_child = await ctx.findChildren({
 					...get_shared_rn_query_args(),
